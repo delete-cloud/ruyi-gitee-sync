@@ -38,11 +38,33 @@ else
   exit 1
 fi
 
-# Set the upstream branch
-git branch --set-upstream-to=origin/main
+# Fetch the latest changes from the origin repository
+git fetch origin
+
+# Check if the 'main' branch exists on the remote and set it as the upstream branch
+if git show-ref --verify --quiet refs/remotes/origin/main; then
+  git branch --set-upstream-to=origin/main
+  echo "Set upstream branch to origin/main."
+else
+  echo "Error: 'main' branch does not exist on the remote repository."
+  exit 1
+fi
 
 # Pull the latest changes from the main branch
 git pull origin main
 
-# Push the changes to the gitee repository
-git push https://$your_gitee_username:$your_gitee_token@gitee.com/$your_gitee_username/packages-index.git
+# Check out the main branch locally
+if git show-ref --verify --quiet refs/heads/main; then
+  git checkout main
+else
+  git checkout -b main
+fi
+
+# Fetch the latest changes from Gitee's main branch
+git fetch https://$your_gitee_username:$your_gitee_token@gitee.com/$your_gitee_username/packages-index.git main
+
+# Merge Gitee's main branch changes into the local main branch
+git merge FETCH_HEAD
+
+# Force push the changes to the Gitee repository main branch
+git push -f https://$your_gitee_username:$your_gitee_token@gitee.com/$your_gitee_username/packages-index.git main
